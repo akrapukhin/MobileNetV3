@@ -11,7 +11,7 @@ The neural net uses deapthwise separable convolutions instead of standard convol
 #### MobileNetV2
 MobileNetV2: Inverted Residuals and Linear Bottlenecks<br>
 [https://arxiv.org/pdf/1801.04381.pdf]<br>
-The second version is based on the inverted residual with linear bottleneck module. This module takes as an input a compressed tensor with small number of channels, expands it using 1x1 convolutions (increasing the number of channels), filters it using 1-channel filters (depthwise convolution as in V1) and then compresses it using 1x1 convolution. Non-linearity is not applied to the output of the last 1x1 compressing convolution (hence the name "linear bottleneck"). The output of the module is then feeded to the next module. The shortcuts are applied to the bottlenecks. Using inverted residuals and linear bottlenecks allows to decrease the number of parameters and operations, and reduce latency compared to MobileNetV1. Accuracy stays at the same level.
+The second version is based on a novel layer module: the inverted residual with linear bottleneck. This module takes as an input a compressed tensor with small number of channels, expands it using 1x1 convolutions (increasing the number of channels), filters it using 1-channel filters (depthwise convolution as in V1) and then compresses it using 1x1 convolution. Non-linearity is not applied to the output of the last 1x1 compressing convolution (hence the name "linear bottleneck"). The output of the module is then feeded to the next module. The shortcuts are applied to the bottlenecks. Using inverted residuals and linear bottlenecks allows to decrease the number of parameters and operations, and reduce latency compared to MobileNetV1. Accuracy stays at the same level.
 
 #### MobileNetV3
 Searching for MobileNetV3<br>
@@ -34,15 +34,20 @@ You can change these parameters using flags:<br>
 python train.py --model large --width 0.5 --iter 40 --batch 64
 ```
 
+Read more info with the help command:
+```
+python train.py -h
+```
+
 I got the following results after training for 20 iterations:<br>
-```
-Mobilenet_v3_small_0.25 val_acc: 60.13%
-Mobilenet_v3_small_0.50 val_acc: 66.37%
-Mobilenet_v3_small_1.00 val_acc: 69.44%
-Mobilenet_v3_large_0.25 val_acc: 65.03%
-Mobilenet_v3_large_0.50 val_acc: 69.50%
-Mobilenet_v3_large_1.00 val_acc: 71.75%
-```
+
+Mobilenet_v3_small_0.25 val_acc: 60.13%<br>
+Mobilenet_v3_small_0.50 val_acc: 66.37%<br>
+Mobilenet_v3_small_1.00 val_acc: 69.44%<br>
+Mobilenet_v3_large_0.25 val_acc: 65.03%<br>
+Mobilenet_v3_large_0.50 val_acc: 69.50%<br>
+Mobilenet_v3_large_1.00 val_acc: 71.75%<br>
+
 
 
 ## Testing
@@ -50,7 +55,7 @@ To run inference, use this command:
 ```
 python test.py
 ```
-For each model present in the trained_models folder the script will do classification of all images from the test_images folder. There is already one trained model in trained_models and 20 images in test_images.
+For each model present in the trained_models folder the script will do classification of all images from the test_images folder. There is already one trained model in trained_models and 20 images in test_images. All trained models will be placed in trained_models. And you can add other images to test_images.
 
 
 ## Latency measurements
@@ -61,5 +66,6 @@ python latency.py
 The script will measure the latency of the small and large models with different width multipliers (0.25, 0.5, 1.0) on both CPU and GPU (if available).
 
 ## Notes
-- The stride in the initial layers is set to 1 by default instead of 2 to adapt for small 32x32 resolution of the CIFAR dataset. If you want to use stride 2 from the papes, set the si parameter of the network to 2 at initialization. Example:
+- The stride in the initial layers is set to 1 by default instead of 2 to adapt for the small 32x32 resolution of the CIFAR dataset. If you want to use stride 2 as in the paper, set the si parameter of the network to 2 at initialization. Example:
 Mobilenet_v3_large(wm=1.0, si=2)
+- In table 2 for the small model in the paper there is an SE block in the conv2d layer before the pool layer. It seems to be an error. The SE block is used only inside the bottlenecks in all other cases. And the official tensorflow code doesn't use the SE block at that place [https://github.com/tensorflow/models/blob/master/research/slim/nets/mobilenet/mobilenet_v3.py]. So, I don't use it either.
